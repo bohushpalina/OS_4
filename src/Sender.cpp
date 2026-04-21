@@ -2,7 +2,7 @@
 #include <iostream>
 #include <string>
 
-using namespace solution;
+using namespace std;
 
 int main(int argc, char* argv[]) {
     cout << "=== Sender ===\n";

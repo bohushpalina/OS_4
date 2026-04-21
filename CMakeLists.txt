@@ -1,78 +1,62 @@
-cmake_minimum_required(VERSION 3.16)
-project(Lab_4C++98 LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.10)
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 
-add_definitions(-D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING)
+project(Lab4_OS)
+
+# Лаба требует C++98
 set(CMAKE_CXX_STANDARD 98)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.27")
-    set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+# Тотальное отключение предупреждений MSVC, чтобы не было ошибки C2220
+if(MSVC)
+    add_compile_options(/W0 /WX-)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
 
-option(BUILD_TESTING "Build tests" ON)
+# --- 1. Загрузка Google Test ---
+include(FetchContent)
 
-set(PROJECT_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/headers")
-include_directories(${PROJECT_INCLUDE_DIR})
+# Отключаем всё лишнее, чтобы GTest просто тихо собрался
+set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
 
-add_library(SharedQueue
-        src/SharedQueue.cpp
+# Используем 1.10.0 (в ней убрали жесткий форс ошибки C2220)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/refs/tags/release-1.10.0.zip
 )
-target_include_directories(SharedQueue PUBLIC headers)
+FetchContent_MakeAvailable(googletest)
 
+# Принудительно отключаем ошибки в скачанных файлах GTest
+if(TARGET gtest)
+    target_compile_options(gtest PRIVATE /W0 /WX-)
+    target_compile_options(gtest_main PRIVATE /W0 /WX-)
+endif()
+
+# --- 2. Настройка путей ---
+include_directories(headers)
+# Обрати внимание: в 1.10.0 путь к include немного другой
+include_directories(${googletest_SOURCE_DIR}/googletest/include)
+
+# --- 3. RECEIVER ---
 add_executable(receiver
-        src/Receiver.cpp
+    src/Receiver.cpp
+    src/SharedQueue.cpp
 )
-target_link_libraries(receiver PRIVATE SharedQueue)
 
+# --- 4. SENDER ---
 add_executable(sender
-        src/Sender.cpp
+    src/Sender.cpp
+    src/SharedQueue.cpp
 )
-target_link_libraries(sender PRIVATE SharedQueue)
 
-if(BUILD_TESTING)
-    include(FetchContent)
-    FetchContent_Declare(
-            googletest
-            URL https://github.com/google/googletest/archive/release-1.7.0.zip
-            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-    )
-    FetchContent_MakeAvailable(googletest)
+# --- 5. TESTS ---
+add_executable(tests
+    tests/test_reciever.cpp
+    tests/test_sender.cpp
+    tests/test_shared_queue.cpp
+    src/SharedQueue.cpp
+)
 
-    add_definitions(-D_SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING)
-
-    enable_testing()
-
-    if(DEFINED googletest_SOURCE_DIR)
-        include_directories(${googletest_SOURCE_DIR}/include)
-    endif()
-
-    file(GLOB TEST_SOURCES CONFIGURE_DEPENDS
-            "${CMAKE_SOURCE_DIR}/tests/test_*.cpp"
-    )
-
-    foreach(test_src ${TEST_SOURCES})
-        get_filename_component(test_name "${test_src}" NAME_WE)
-
-        add_executable("${test_name}" "${test_src}"
-                tests/test_sender.cpp
-                tests/test_reciever.cpp)
-        target_link_libraries("${test_name}"
-                PRIVATE
-                SharedQueue
-                gtest_main
-        )
-        target_include_directories("${test_name}" PRIVATE "${PROJECT_INCLUDE_DIR}")
-        if(DEFINED googletest_SOURCE_DIR)
-            target_include_directories("${test_name}" PRIVATE "${googletest_SOURCE_DIR}/googletest/include")
-        endif()
-
-        target_compile_definitions("${test_name}" PRIVATE _SILENCE_TR1_NAMESPACE_DEPRECATION_WARNING)
-
-        if(MSVC)
-            target_compile_options("${test_name}" PRIVATE /WX-) # Отключает "Warnings as Errors" только для тестов
-            add_compile_options(/W3)
-        endif()
-
-        add_test(NAME "${test_name}" COMMAND "${test_name}")
-    endforeach()
-endif()
+# Связываем тесты с библиотекой Google Test
+target_link_libraries(tests PRIVATE gtest_main)

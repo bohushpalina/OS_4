@@ -1,7 +1,7 @@
 #include "../headers/SharedQueue.h"
 #include <algorithm>
 
-using namespace solution;
+using namespace std;
 
 SharedQueue::SharedQueue()
 : hFile_(INVALID_HANDLE_VALUE),

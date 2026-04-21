@@ -2,7 +2,7 @@
 #include "gtest/gtest.h"
 #include "../headers/SharedQueue.h"
 
-using namespace solution;
+using namespace std;
 TEST(ReceiverBehavior, ReadFromEmptyBlocksThenReads) {
     SharedQueue q;
     ASSERT_TRUE(q.CreateAsReceiver("test_recv.bin", 2, 0));

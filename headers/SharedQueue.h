@@ -5,10 +5,8 @@
 #include <string>
 #include <iostream>
 #include <stdio.h>
-#include "solution_namespace.h"
 
-using namespace solution;
-
+using namespace std;
 static const unsigned int MAX_MESSAGE_LEN = 20;
 static const size_t HEADER_BINARY_SIZE = 28;
 

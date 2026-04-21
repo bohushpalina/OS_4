@@ -2,7 +2,7 @@
 #include "gtest/gtest.h"
 #include "../headers/SharedQueue.h"
 
-using namespace solution;
+using namespace std;
 
 TEST(SharedQueueCore, HeaderSerializationRoundTrip) {
     SharedQueue q;

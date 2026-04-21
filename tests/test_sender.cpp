@@ -2,7 +2,7 @@
 #include "gtest/gtest.h"
 #include "../headers/SharedQueue.h"
 
-using namespace solution;
+using namespace std;
 TEST(SenderBehavior, SendShortMessages) {
     SharedQueue q;
     ASSERT_TRUE(q.CreateAsReceiver("test_send.bin", 3, 0));

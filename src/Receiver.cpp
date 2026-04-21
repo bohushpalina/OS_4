@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-using namespace solution;
+using namespace std;
 
 static unsigned int to_uint(const string& s) {
     return static_cast<unsigned int>(atoi(s.c_str()));
@@ -15,15 +15,74 @@ int main() {
     string fileName;
     getline(cin, fileName);
 
-    cout << "Input records count (capacity): ";
+    std::cout << "Input records count (capacity): ";
     string tmp;
-    getline(cin, tmp);
-    unsigned int capacity = to_uint(tmp);
+    unsigned int capacity = 0;
 
-    cout << "Input desired Sender process count: ";
+    while (true) {
+        getline(std::cin, tmp);
+
+        if (tmp.empty()) {
+            std::cout << "Input cannot be empty. Try again: ";
+            continue;
+        }
+        bool allDigits = true;
+        for (char c : tmp) {
+            if (c < '0' || c > '9') {
+                allDigits = false;
+                break;
+            }
+        }
+        if (!allDigits) {
+            std::cout << "Invalid input. Only digits are allowed. Try again: ";
+            continue;
+        }
+        capacity = static_cast<unsigned int>(atoi(tmp.c_str()));
+
+        if (capacity == 0) {
+            std::cout << "Number must be positive. Try again: ";
+            continue;
+        }
+        break;
+    }
+
+    const unsigned int MAX_SENDERS = 10;
+    std::cout << "Input desired Sender process count (1-" << MAX_SENDERS << "): ";
     string tmp2;
-    getline(cin, tmp2);
-    unsigned int senderCount = to_uint(tmp2);
+    unsigned int senderCount = 0;
+
+    while (true) {
+        getline(std::cin, tmp2);
+        if (tmp2.empty()) {
+            std::cout << "Input cannot be empty. Try again: ";
+            continue;
+        }
+        bool allDigits = true;
+        for (char c : tmp2) {
+            if (c < '0' || c > '9') {
+                allDigits = false;
+                break;
+            }
+        }
+        if (!allDigits) {
+            std::cout << "Invalid input. Only digits are allowed. Try again: ";
+            continue;
+        }
+        senderCount = static_cast<unsigned int>(atoi(tmp2.c_str()));
+
+        if (senderCount == 0) {
+            std::cout << "Number must be positive. Try again: ";
+            continue;
+        }
+        if (senderCount > MAX_SENDERS) {
+            std::cout << "Number too large. Max allowed: " << MAX_SENDERS << ". Try again: ";
+            continue;
+        }
+        break;
+    }
+
+    std::cout << "Sender count is: " << senderCount << "\n";
+
 
     SharedQueue queue;
     if (!queue.CreateAsReceiver(fileName, capacity, senderCount)) {
