@@ -72,7 +72,7 @@ bool SharedQueue::MapFile(const string& path, bool create, unsigned int capacity
         }
         totalSize = (DWORD)sz.QuadPart;
         if (totalSize < HEADER_BINARY_SIZE) {
-            printf("[SharedQueue] Invalid file size\n");
+            printf("Invalid file size\n");
             return false;
         }
     }
@@ -176,7 +176,6 @@ bool SharedQueue::CreateAsReceiver(const string& fileName,
         return false;
     if (!OpenSyncObjects(true, capacity, expectedSenders))
         return false;
-    printf("[Receiver] Queue created: capacity=%u, senders=%u\n", capacity, expectedSenders);
     return true;
 }
 
@@ -190,7 +189,7 @@ bool SharedQueue::OpenAsSender(const string& fileName) {
     QueueHeaderBinary hdr;
     ReadHeader(hdr);
     if (hdr.msgLen != MAX_MESSAGE_LEN) {
-        printf("[Sender] Incompatible message length\n");
+        printf("Wrong length\n");
         return false;
     }
     return true;
@@ -213,7 +212,7 @@ unsigned int SharedQueue::WriteIndex() const {
 bool SharedQueue::WaitAllSendersReady(DWORD timeoutMs) {
     DWORD res = WaitForSingleObject(hAllReadyEvent_, timeoutMs);
     if (res == WAIT_OBJECT_0) return true;
-    if (res == WAIT_TIMEOUT) printf("[Receiver] Sender readiness wait timeout\n");
+    if (res == WAIT_TIMEOUT) printf("Sender readiness wait timeout\n");
     else PrintLastErrorA("WaitAllSendersReady");
     return false;
 }
@@ -283,7 +282,7 @@ bool SharedQueue::PopMessage(string &outMsg, bool verbose) {
     ReleaseSemaphore(hSemEmpty_, 1, NULL);
 
     if (verbose) {
-        printf("[Receiver] Read message: '%s'\n", outMsg.c_str());
+        printf("Receiver - прочтено сообщение: '%s'\n", outMsg.c_str());
     }
     return true;
 }
@@ -291,7 +290,7 @@ bool SharedQueue::PopMessage(string &outMsg, bool verbose) {
 bool SharedQueue::PushMessage(const string& msg, bool verbose) {
     if (!IsValid()) return false;
     if (msg.size() >= MAX_MESSAGE_LEN) {
-        printf("[Sender] Message too long (>= %u)\n", MAX_MESSAGE_LEN);
+        printf("Сообщение слишком длинное (>= %u)\n", MAX_MESSAGE_LEN);
         return false;
     }
 
@@ -324,7 +323,7 @@ bool SharedQueue::PushMessage(const string& msg, bool verbose) {
     ReleaseSemaphore(hSemFull_, 1, NULL);
 
     if (verbose) {
-        printf("[Sender] Sent message: '%s'\n", msg.c_str());
+        printf("Sender - отправлено сообщение: '%s'\n", msg.c_str());
     }
     return true;
 }

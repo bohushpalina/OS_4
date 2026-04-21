@@ -1,54 +1,60 @@
 #include "../headers/SharedQueue.h"
 #include <iostream>
 #include <string>
+#include <clocale>
 
 using namespace std;
 
 int main(int argc, char* argv[]) {
-    cout << "=== Sender ===\n";
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+
+    cout << "Консоль: Sender\n";
     if (argc < 2) {
-        cout << "Usage: sender.exe <fileName>\n";
+        cout << "Использование: sender.exe <имя_файла>\n";
         return 1;
     }
     string fileName = argv[1];
 
     SharedQueue queue;
     if (!queue.OpenAsSender(fileName)) {
-        cerr << "[Sender] Can't open queue.\n";
+        cerr << "Ошибка: не удалось подключиться к приемнику.\n";
         return 1;
     }
 
     if (!queue.SignalSenderReady()) {
-        cerr << "[Sender] Can't send ready signal.\n";
+        cerr << "Ошибка: сбой отправки сигнала готовности.\n";
         return 1;
     }
-    cout << "[Sender] Ready. Commands: s - send, q - quit.\n";
+    cout << "Успешное подключение.\n\nДоступны команды: \"send\" - отправить , \"exit\" - закрыть.\n";
 
     while (true) {
-        cout << "[Sender] Command (s/q): ";
+        cout << "Введите команду (send/exit): ";
         string cmdLine;
         if (!getline(cin, cmdLine)) break;
-        if (cmdLine == "s") {
+        if (cmdLine == "send") {
             if (queue.IsShuttingDown()) {
-                cout << "[Sender] Receiver finishes. Quitting.\n";
+                cout << "Приемник отключился. Выход.\n";
                 break;
             }
-            cout << "Input message (<20 symbols): ";
+            cout << "Введите текст сообщения (до 19 символов): ";
             string msg;
             if (!getline(cin, msg)) break;
             if (msg.size() >= MAX_MESSAGE_LEN) {
-                cout << "[Sender] Message too long.\n";
+                cout << "Слишком длинное сообщение. Отказ.\n";
                 continue;
             }
             if (!queue.PushMessage(msg, true)) {
-                cout << "[Sender] Error.\n";
+                cout << "Сбой передачи.\n";
                 if (queue.IsShuttingDown()) break;
             }
-        } else if (cmdLine == "q") {
-            cout << "[Sender] Quitting.\n";
+        }
+        else if (cmdLine == "exit") {
+            cout << "Завершение процесса.\n";
             break;
-        } else {
-            cout << "Unknown commands.\n";
+        }
+        else {
+            cout << "Неизвестная команда.\n";
         }
     }
     return 0;

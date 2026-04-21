@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <clocale>
 
 using namespace std;
 
@@ -10,12 +11,15 @@ static unsigned int to_uint(const string& s) {
 }
 
 int main() {
-    cout << "=== Receiver ===\n";
-    cout << "Input binary file name: ";
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+
+    cout << "Консоль: Receiver\n";
+    cout << "Задайте имя бинарного файла: ";
     string fileName;
     getline(cin, fileName);
 
-    std::cout << "Input records count (capacity): ";
+    std::cout << "Укажите вместимость очереди (макс. число записей): ";
     string tmp;
     unsigned int capacity = 0;
 
@@ -23,7 +27,7 @@ int main() {
         getline(std::cin, tmp);
 
         if (tmp.empty()) {
-            std::cout << "Input cannot be empty. Try again: ";
+            std::cout << "Пустая строка недопустима. Введите заново: ";
             continue;
         }
         bool allDigits = true;
@@ -34,27 +38,27 @@ int main() {
             }
         }
         if (!allDigits) {
-            std::cout << "Invalid input. Only digits are allowed. Try again: ";
+            std::cout << "Требуется ввести число. Повторите: ";
             continue;
         }
         capacity = static_cast<unsigned int>(atoi(tmp.c_str()));
 
         if (capacity == 0) {
-            std::cout << "Number must be positive. Try again: ";
+            std::cout << "Размер должен быть больше нуля. Введите заново: ";
             continue;
         }
         break;
     }
 
     const unsigned int MAX_SENDERS = 10;
-    std::cout << "Input desired Sender process count (1-" << MAX_SENDERS << "): ";
+    std::cout << "Сколько процессов-отправителей запустить? (от 1 до " << MAX_SENDERS << "): ";
     string tmp2;
     unsigned int senderCount = 0;
 
     while (true) {
         getline(std::cin, tmp2);
         if (tmp2.empty()) {
-            std::cout << "Input cannot be empty. Try again: ";
+            std::cout << "Пустая строка недопустима. Введите заново: ";
             continue;
         }
         bool allDigits = true;
@@ -65,32 +69,29 @@ int main() {
             }
         }
         if (!allDigits) {
-            std::cout << "Invalid input. Only digits are allowed. Try again: ";
+            std::cout << "Требуется ввести число. Повторите: ";
             continue;
         }
         senderCount = static_cast<unsigned int>(atoi(tmp2.c_str()));
 
         if (senderCount == 0) {
-            std::cout << "Number must be positive. Try again: ";
+            std::cout << "Количество должно быть больше нуля. Введите заново: ";
             continue;
         }
         if (senderCount > MAX_SENDERS) {
-            std::cout << "Number too large. Max allowed: " << MAX_SENDERS << ". Try again: ";
+            std::cout << "Превышен лимит. Допускается максимум " << MAX_SENDERS << ". Повторите: ";
             continue;
         }
         break;
     }
 
-    std::cout << "Sender count is: " << senderCount << "\n";
-
-
     SharedQueue queue;
     if (!queue.CreateAsReceiver(fileName, capacity, senderCount)) {
-        cerr << "Error creating queue.\n";
+        cerr << "Ошибка: не удалось инициализировать очередь.\n";
         return 1;
     }
 
-    cout << "Launching " << senderCount << " instances of sender process...\n";
+    cout << "Старт процессов (Sender): " << senderCount << " шт...\n";
     char path[MAX_PATH];
     GetModuleFileNameA(NULL, path, MAX_PATH);
 
@@ -112,36 +113,39 @@ int main() {
         DWORD creationFlags = CREATE_NEW_CONSOLE;
 
         if (!CreateProcessA(NULL, &buf[0], NULL, NULL, FALSE, creationFlags, NULL, NULL, &si, &pi)) {
-            PrintLastErrorA("CreateProcess sender");
-        } else {
+            PrintLastErrorA("Сбой запуска отправителя");
+        }
+        else {
             CloseHandle(pi.hThread);
             CloseHandle(pi.hProcess);
         }
     }
 
-    cout << "Waiting for all Senders to be ready...\n";
     queue.WaitAllSendersReady(INFINITE);
-    cout << "All Senders ready. Commands: r - read, q - quit.\n";
+    cout << "Все на связи.\n\n";
+    cout << "Доступны команды: \"read\" - прочитать, \"exit\" - выйти.\n";
 
     while (true) {
-        cout << "[Receiver] Command (r/q): ";
+        cout << "Ввод команды (read/exit): ";
         string cmdLine;
         if (!getline(cin, cmdLine)) break;
-        if (cmdLine == "r") {
+        if (cmdLine == "read") {
             string msg;
             bool ok = queue.PopMessage(msg, true);
             if (!ok) {
                 if (queue.IsShuttingDown())
-                    cout << "[Receiver] Quitting...\n";
+                    cout << "Завершение работы...\n";
                 else
-                    cout << "[Receiver] No messages\n";
+                    cout << "Очередь пуста\n";
             }
-        } else if (cmdLine == "q") {
-            cout << "[Receiver] Finishing. shutdown signal.\n";
+        }
+        else if (cmdLine == "exit") {
+            cout << "Посылаем сигнал на закрытие.\n";
             queue.SignalShutdown();
             break;
-        } else {
-            cout << "Unknown command.\n";
+        }
+        else {
+            cout << "Команда не распознана.\n";
         }
     }
     return 0;
