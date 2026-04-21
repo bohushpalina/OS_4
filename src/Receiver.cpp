@@ -91,7 +91,14 @@ int main() {
     }
 
     cout << "Launching " << senderCount << " instances of sender process...\n";
-    string exeName = ".\\sender.exe";
+    char path[MAX_PATH];
+    GetModuleFileNameA(NULL, path, MAX_PATH);
+
+    string fullPath(path);
+    size_t pos = fullPath.find_last_of("\\/");
+    fullPath = fullPath.substr(0, pos + 1);
+
+    string exeName = fullPath + "sender.exe";
     for (unsigned int i = 0; i < senderCount; ++i) {
         string cmd = "\"" + exeName + "\" \"" + fileName + "\"";
         STARTUPINFOA si;

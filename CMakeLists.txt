@@ -3,7 +3,6 @@ set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 
 project(Lab4_OS)
 
-# Лаба требует C++98
 set(CMAKE_CXX_STANDARD 98)
 
 # Тотальное отключение предупреждений MSVC, чтобы не было ошибки C2220
